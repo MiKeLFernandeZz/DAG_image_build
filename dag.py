@@ -2,16 +2,15 @@ from datetime import datetime
 from airflow.decorators import dag, task
 from kubernetes.client import models as k8s
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 
 @dag(
-    description='esto es una demo',
-    schedule_interval='0 12 * * *',
-    start_date=datetime(2024, 4, 16),
+    description='Generate Docker image',
+    schedule_interval='* 12 * * *', 
+    start_date=datetime(2024, 6, 25),
     catchup=False,
-    tags=['test', 'dag'],
+    tags=['test', 'build_image'],
 )
-def test_bash():
+def DAG_image_build_dag():
 
     env_vars={
         "POSTGRES_USERNAME": Variable.get("POSTGRES_USERNAME"),
@@ -41,43 +40,43 @@ def test_bash():
     init_container = k8s.V1Container(
         name="git-clone",
         image="alpine/git:latest",
-        command=["sh", "-c", "mkdir -p /git && cd /git && git clone -b main --single-branch https://gitlab.com/mikel_fernandez/test-platform.git"],
+        command=["sh", "-c", "mkdir -p /git && cd /git && git clone -b main --single-branch git://github.com/MiKeLFernandeZz/DAG_image_build.git"],
         volume_mounts=init_container_volume_mounts
     )
 
     @task.kubernetes(
-        task_id='build_push_image',
-        name='build',
-        namespace='airflow',
         image='mfernandezlabastida/kaniko:1.0',
-        image_pull_policy='Always',
+        name='image_build',
+        task_id='image_build',
+        namespace='airflow',
         init_containers=[init_container],
         volumes=[volume],
         volume_mounts=[volume_mount],
-        env_vars=env_vars,
         do_xcom_push=True,
+        resources=client.V1ResourceRequirements(
+            requests={'cpu': '0.5'},
+            limits={'cpu': '0.8'}
+        ),
+        env_vars=env_vars
     )
-    def img_build_task():
-        # import subprocess
+    def image_build_task():
         import logging
         from kaniko import Kaniko, KanikoSnapshotMode
 
-        path = '/git/DAG_image_build/docker/'
+        path = '/git/DAG_image_build/docker'
 
         logging.warning("Building and pushing image")
         kaniko = Kaniko()
         kaniko.build(
             dockerfile=f'{path}/Dockerfile',
             context=path,
-            # docker_registry_uri='http://registry-docker-registry.registry.svc.cluster.local:5000/',
             destination='registry.registry.svc.cluster.local:5000/mfernandezlabastida/engine:1.0',
             snapshot_mode=KanikoSnapshotMode.full,
         )
 
-    # build_push_image_result = build_push_image('docker')
-    img_build_task_result = img_build_task()
-
+    image_build_result = image_build_task()
+    
     # Define the order of the pipeline
-    img_build_task_result
-# Call the DAG
-test_bash()
+    image_build_result
+# Call the DAG 
+DAG_image_build_dag()
