@@ -53,7 +53,7 @@ def DAG_image_build_dag():
         volumes=[volume],
         volume_mounts=[volume_mount],
         do_xcom_push=True,
-        resources=client.V1ResourceRequirements(
+        container_resources=k8s.V1ResourceRequirements(
             requests={'cpu': '0.5'},
             limits={'cpu': '0.8'}
         ),
