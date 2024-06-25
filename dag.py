@@ -99,9 +99,9 @@ def DAG_image_build_dag():
         import shutil
         import logging
         from kaniko import Kaniko, KanikoSnapshotMode
-        import sys
+        # import sys
 
-        sys.path.insert(1, '/git/DAG_image_build')
+        # sys.path.insert(1, '/git/DAG_image_build')
 
         try:
             # Obtener información del run
@@ -111,7 +111,7 @@ def DAG_image_build_dag():
             print(f"URI de los artefactos del run: {artifact_uri}")
 
             # Descargar el artefacto requirements.txt a una carpeta temporal
-            tmp_artifact_dir = "./artifacts"
+            tmp_artifact_dir = "/git/DAG_image_build/artifacts"
             mlflow.artifacts.download_artifacts(run_id=run_id, dst_path=tmp_artifact_dir, artifact_path='model/requirements.txt')
 
             # Verificar si el archivo fue descargado correctamente
@@ -119,7 +119,7 @@ def DAG_image_build_dag():
             print(downloaded_file)
             if os.path.exists(downloaded_file):
                 # Mover el archivo descargado a la ubicación deseada
-                shutil.move(downloaded_file, './docker/requirements.txt')
+                shutil.move(downloaded_file, '/git/DAG_image_build/docker/requirements.txt')
                 print("Archivo requirements.txt movido exitosamente.")
             else:
                 print(f"Error: No se pudo descargar el archivo requirements.txt desde {artifact_uri}.")
@@ -132,7 +132,7 @@ def DAG_image_build_dag():
         except Exception as e:
             print(f"Error inesperado: {str(e)}")
 
-        path = './docker'
+        path = '/git/DAG_image_build/docker'
 
         logging.warning("Building and pushing image")
         kaniko = Kaniko()
