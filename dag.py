@@ -99,6 +99,7 @@ def DAG_image_build_dag():
         import shutil
         import logging
         from kaniko import Kaniko, KanikoSnapshotMode
+        import sys
 
         sys.path.insert(1, '/git/DAG_image_build')
 
