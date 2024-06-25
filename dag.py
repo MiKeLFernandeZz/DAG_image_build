@@ -40,7 +40,7 @@ def DAG_image_build_dag():
     init_container = k8s.V1Container(
         name="git-clone",
         image="alpine/git:latest",
-        command=["sh", "-c", "mkdir -p /git && cd /git && git clone -b main --single-branch git://github.com/MiKeLFernandeZz/DAG_image_build.git"],
+        command=["sh", "-c", "mkdir -p /git && cd /git && git clone -b main --single-branch https://github.com/MiKeLFernandeZz/DAG_image_build.git"],
         volume_mounts=init_container_volume_mounts
     )
 
