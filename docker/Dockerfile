@@ -1,24 +1,15 @@
-# FROM gcr.io/kaniko-project/executor:v0.12.0 AS kaniko
-# Usa la imagen oficial de Python con alpine como base
-FROM python:3.9.18 
+FROM python:3.9
 
-# ENV DOCKER_CONFIG /kaniko/.docker
-# COPY --from=kaniko /kaniko /kaniko
+WORKDIR /code
 
-# Establece el directorio de trabajo en /app
-WORKDIR /app 
+COPY ./requirements.txt /code/requirements.txt
 
-# Copia el archivo requirements.txt al directorio de trabajo
-COPY requirements.txt .
+RUN pip install --upgrade pip
 
-# RUN pip install --upgrade pip
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
+COPY . .
+RUN mkdir -p model 
 
-# # Instala dependencias del sistema
-# RUN apt-get update && apt-get install -y cmake
-
-# Instala las dependencias especificadas en el archivo requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Especifica el comando por defecto a ejecutar cuando se inicie el contenedor
-# CMD ["python", "tu_script.py"]
+#CMD ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "381"]
+ENTRYPOINT [ "python3", "main.py" ]
