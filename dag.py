@@ -71,7 +71,7 @@ def DAG_image_build_dag():
         kaniko.build(
             dockerfile=f'{path}/Dockerfile',
             context=path,
-            destination='registry.registry.svc.cluster.local:5001/mfernandezlabastida/engine:1.0',
+            destination='registry-docker-registry.registry.svc.cluster.local:5001/mfernandezlabastida/engine:1.0',
             snapshot_mode=KanikoSnapshotMode.full,
         )
 
