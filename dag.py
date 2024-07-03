@@ -5,7 +5,7 @@ from airflow.models import Variable
 
 @dag(
     description='Generate Docker image',
-    schedule_interval='* 12 * * *', 
+    schedule_interval='0 12 * * *', 
     start_date=datetime(2024, 6, 25),
     catchup=False,
     tags=['test', 'build_image'],
