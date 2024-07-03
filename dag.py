@@ -150,6 +150,25 @@ def DAG_image_build_dag():
 
         # path = '/git/DAG_image_build/docker'
 
+        logging.warning(os.getcwd())
+
+        directory_contents = os.listdir(os.getcwd())
+        logging.warning("Contenido del directorio actual:")
+        for item in directory_contents:
+            logging.warning(item)
+
+            directory_to_list = './docker'
+
+        # Comprobar si la carpeta existe
+        if os.path.exists(directory_to_list):
+            # Obtener y mostrar el contenido de la carpeta
+            directory_contents = os.listdir(directory_to_list)
+            print(f"Contenido de la carpeta {directory_to_list}:")
+            for item in directory_contents:
+                print(item)
+        else:
+            print(f"La carpeta {directory_to_list} no existe.")
+
         logging.warning("Building and pushing image")
         kaniko = Kaniko()
         kaniko.build(
