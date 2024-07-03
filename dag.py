@@ -153,8 +153,8 @@ def DAG_image_build_dag():
         logging.warning("Building and pushing image")
         kaniko = Kaniko()
         kaniko.build(
-            dockerfile=f'.docker/Dockerfile',
-            context='.docker',
+            dockerfile=f'./docker/Dockerfile',
+            context='./docker',
             destination='registry-docker-registry.registry.svc.cluster.local:5001/mfernandezlabastida/engine:1.1',
             snapshot_mode=KanikoSnapshotMode.full,
             # registry_username='username',
