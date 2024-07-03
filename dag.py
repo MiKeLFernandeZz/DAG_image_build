@@ -5,7 +5,7 @@ from airflow.models import Variable
 
 @dag(
     description='Generate Docker image',
-    schedule_interval='0 12 * * *', 
+    schedule_interval='* 12 * * *', 
     start_date=datetime(2024, 6, 25),
     catchup=False,
     tags=['test', 'build_image'],
@@ -99,35 +99,21 @@ def DAG_image_build_dag():
         import shutil
         import logging
         from kaniko import Kaniko, KanikoSnapshotMode
+        # import sys
 
-        dockerfile_content = """
-        FROM python:3.9
+        # sys.path.insert(1, '/git/DAG_image_build')
 
-        WORKDIR /code
-
-        COPY ./requirements.txt /code/requirements.txt
-
-        RUN pip install --upgrade pip
-
-        RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-
-        COPY . .
-        RUN mkdir -p model 
-
-        #CMD ["uvicorn", "app.main:app", "--proxy-headers", "--host", "0.0.0.0", "--port", "381"]
-        ENTRYPOINT [ "python3", "main.py" ]
-        """
-
-        directory = './docker'
-        os.makedirs(directory, exist_ok=True)
-        file_path = os.path.join(directory, 'Dockerfile')
-
-        with open(file_path, 'w') as file:
-            file.write(dockerfile_content)
+        path = '/git/DAG_image_build/'
 
         try:
+            # Obtener información del run
+            run_info = mlflow.get_run(run_id)
+            artifact_uri = run_info.info.artifact_uri + '/model/requirements.txt'
+
+            print(f"URI de los artefactos del run: {artifact_uri}")
+
             # Descargar el artefacto requirements.txt a una carpeta temporal
-            tmp_artifact_dir = "./artifacts"
+            tmp_artifact_dir = os.path.join(path, "artifacts")
             mlflow.artifacts.download_artifacts(run_id=run_id, dst_path=tmp_artifact_dir, artifact_path='model/requirements.txt')
 
             # Verificar si el archivo fue descargado correctamente
@@ -135,10 +121,10 @@ def DAG_image_build_dag():
             print(downloaded_file)
             if os.path.exists(downloaded_file):
                 # Mover el archivo descargado a la ubicación deseada
-                shutil.move(downloaded_file, './docker/requirements.txt')
+                shutil.move(downloaded_file, os.path.join(path, 'docker', 'requirements.txt'))
                 print("Archivo requirements.txt movido exitosamente.")
             else:
-                print(f"Error: No se pudo descargar el archivo requirements.txt")
+                print(f"Error: No se pudo descargar el archivo requirements.txt desde {artifact_uri}.")
         except mlflow.exceptions.MlflowException as e:
             print(f"Error de MLflow: {e}")
         except FileNotFoundError:
@@ -148,32 +134,12 @@ def DAG_image_build_dag():
         except Exception as e:
             print(f"Error inesperado: {str(e)}")
 
-        # path = '/git/DAG_image_build/docker'
-
-        logging.warning(os.getcwd())
-
-        directory_contents = os.listdir(os.getcwd())
-        logging.warning("Contenido del directorio actual:")
-        for item in directory_contents:
-            logging.warning(item)
-
-            directory_to_list = './docker'
-
-        # Comprobar si la carpeta existe
-        if os.path.exists(directory_to_list):
-            # Obtener y mostrar el contenido de la carpeta
-            directory_contents = os.listdir(directory_to_list)
-            print(f"Contenido de la carpeta {directory_to_list}:")
-            for item in directory_contents:
-                print(item)
-        else:
-            print(f"La carpeta {directory_to_list} no existe.")
 
         logging.warning("Building and pushing image")
         kaniko = Kaniko()
         kaniko.build(
-            dockerfile=f'./docker/Dockerfile',
-            context='./docker',
+            dockerfile=os.path.join(path, 'docker', 'Dockerfile'),
+            context=path,
             destination='registry-docker-registry.registry.svc.cluster.local:5001/mfernandezlabastida/engine:1.1',
             snapshot_mode=KanikoSnapshotMode.full,
             # registry_username='username',
